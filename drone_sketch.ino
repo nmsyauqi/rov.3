@@ -13,8 +13,8 @@
 // 2. KONFIGURASI WIFI & SERVER (Update Manual)
 // =============================================
 // PENTING: Perhatikan spasi jika masih gagal konek!
-const char* ssid     = "daffa";       
-const char* password = "daffa123";               
+const char* ssid     = "SHA28";       
+const char* password = "";               
 String serverName    = "http://daffa.underwaterdrone.my.id/api.php";
 
 // =============================================
