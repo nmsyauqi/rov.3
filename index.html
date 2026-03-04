@@ -480,16 +480,29 @@
         let lastDataId = null;
 
         // Masukkan URL Google Apps Script milikmu di sini (Diapit tanda kutip)
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw63gn3GwH0enKhNL6Eq0hcMAFItE3LGTZ7RvSsTF6eG7Pz8jVwGjtcoqphuqc1n-9Z6g/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz6_ToPya23bwhmR1-lMcv702KDXT3bDSWpWOsJ8pK5He3VTB_Noezrat0tvb_fexIOHA/exec"; 
 
-        // 1. Fungsi Fetch Live Data
+        // 1. Helper Function for API Calls
+        async function apiCall(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error(`API Call failed: ${url}`, error);
+                throw error;
+            }
+        }
+
+        // 2. Fungsi Fetch Live Data
         async function fetchData() {
             try {
-                // MENGUBAH api.php MENJADI SCRIPT_URL
-                const response = await fetch(`${SCRIPT_URL}?action=latest`);
-                const data = await response.json();
+                const data = await apiCall(`${SCRIPT_URL}?action=latest`);
 
-                if (data.status !== "empty" && data.id) {
+                if (data && data.status !== "empty" && data.id) {
                     if (data.id !== lastDataId) {
                         lastDataId = data.id;
 
@@ -514,20 +527,17 @@
                     }
                 }
             } catch (error) {
-                console.error('Error fetching data:', error);
                 document.getElementById('syncStatus').textContent = "OFFLINE";
                 document.getElementById('syncStatus').className = "text-sm font-mono font-medium text-amber-500 uppercase";
             }
         }
 
-        // 2. Fungsi Fetch Reports Data
+        // 3. Fungsi Fetch Reports Data
         async function fetchReports(period = 'daily') {
             try {
-                // MENGUBAH api.php MENJADI SCRIPT_URL
-                const response = await fetch(`${SCRIPT_URL}?action=reports&period=${period}`);
-                const result = await response.json();
+                const result = await apiCall(`${SCRIPT_URL}?action=reports&period=${period}`);
 
-                if (result.status === "success") {
+                if (result && result.status === "success") {
                     const s = result.summary;
                     const ph = s.avg_kualitas_air ? parseFloat(s.avg_kualitas_air) : 0;
                     const turb = s.max_tahan ? parseFloat(s.max_tahan) : 0;
@@ -564,12 +574,11 @@
                     }
                 } else {
                     document.getElementById('report-table-body').innerHTML =
-                        `<tr><td colspan="4" class="px-6 py-10 text-center text-xs text-red-400">Gagal memuat data.</td></tr>`;
+                        `<tr><td colspan="4" class="px-6 py-10 text-center text-xs text-red-500">Gagal memuat data: ${result?.message || 'Unknown error'}</td></tr>`;
                 }
             } catch (error) {
-                console.error('Error fetching reports:', error);
                 document.getElementById('report-table-body').innerHTML =
-                    `<tr><td colspan="4" class="px-6 py-10 text-center text-xs text-red-400">Koneksi ke server gagal.</td></tr>`;
+                    `<tr><td colspan="4" class="px-6 py-10 text-center text-xs text-red-500">Koneksi ke server gagal atau response tidak valid.</td></tr>`;
             }
         }
 
